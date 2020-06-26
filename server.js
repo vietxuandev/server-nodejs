@@ -6,21 +6,20 @@ const logger = require('morgan');
 const helmet = require('helmet');
 const cors = require('cors');
 
-// const loginRequired = require('./api/middlewares/auth.middleware');
-// const verifyToken = require('./api/middlewares/token.middleware');
-// const productRoute = require('./api/routes/product.route');
+// Import index route
 const indexRoute = require('./api/routes/index.route');
 
 // Set port server
 const port = process.env.PORT || 3000;
-
 // Create Express server
 const app = express();
-
-// Hide OS
+// Hide detail OS server
 app.disable('x-powered-by');
-
-// Check status
+// Secure Express apps
+app.use(helmet());
+// Enable CORS 
+app.use(cors());
+// HTTP request logger middleware 
 if (process.env.NODE_ENV === 'development') {
   app.use(logger('dev'));
 }
