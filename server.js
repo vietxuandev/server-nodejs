@@ -17,9 +17,9 @@ const app = express();
 app.disable('x-powered-by');
 // Secure Express apps
 app.use(helmet());
-// Enable CORS 
+// Enable CORS
 app.use(cors());
-// HTTP request logger middleware 
+// HTTP request logger middleware
 if (process.env.NODE_ENV === 'development') {
   app.use(logger('dev'));
 }
@@ -34,7 +34,7 @@ mongoose
   .then(() => console.log('Connected database...'))
   .catch((error) =>
     console.error(`Connect database is failed with error which is ${error}`)
-  )
+  );
 
 // Request body parser
 app.use(bodyParser.json());
@@ -43,9 +43,23 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // Routes
 app.use('/api', indexRoute);
 
-// Response not found api
-app.use((req, res) => {
-  res.status(404).send({ url: req.originalUrl + ' not found' });
+// Catch 404 Errors and forward them to error handler
+app.use((req, res, next) => {
+  const err = new Error('Not Found');
+  err.status = 404;
+  next(err);
+});
+
+// Error handler function
+app.use((err, req, res, next) => {
+  const error = process.env.NODE_ENV === 'development' ? err : {};
+  const status = err.status || 500;
+  // response to client
+  return res.status(status).json({
+    error: {
+      message: error.message,
+    },
+  });
 });
 
 // Listen port

@@ -1,128 +1,122 @@
-const passport = require("passport");
-const JwtStrategy = require("passport-jwt").Strategy;
-const LocalStrategy = require("passport-local").Strategy;
-const GooglePlusTokenStrategy = require("passport-google-plus-token");
-const ExtractJwt = require("passport-jwt").ExtractJwt;
+const passport = require('passport');
+const JwtStrategy = require('passport-jwt').Strategy;
+const LocalStrategy = require('passport-local').Strategy;
+const GooglePlusTokenStrategy = require('passport-google-plus-token');
+const ExtractJwt = require('passport-jwt').ExtractJwt;
 
-const User = require("../models/user.model");
+const User = require('../models/user.model');
 
 // Passport Jwt
 passport.use(
-    new JwtStrategy(
-        {
-            jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken("Authorization"),
-            secretOrKey: process.env.SECRET_KEY,
-        },
-        async (payload, done) => {
-            console.log(payload);
-            try {
-                const user = await User.findById(payload.sub);
-                if (!user) return done(null, false);
-
-                done(null, user);
-            } catch (error) {
-                done(error, false);
-            }
-        }
-    )
+  new JwtStrategy(
+    {
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken('Authorization'),
+      secretOrKey: process.env.SECRET_KEY,
+    },
+    async (payload, done) => {
+      try {
+        const user = await User.findById(payload._id);
+        user.password = undefined;
+        if (!user) return done(null, false);
+        done(null, user);
+      } catch (error) {
+        done(error, false);
+      }
+    }
+  )
 );
 
 // Local Sign Up
 passport.use(
-    'signup',
-    new LocalStrategy(
-        {
-            usernameField: 'email',
-            passwordField: 'password',
-        },
-        async (email, password, done) => {
-            try {
-                const user = await User.findOne({ email });
-                if (user) {
-                    return done({ message: 'User already exists' }, false);
-                } else {
-                    const newUser = new User();
-                    newUser.email = email;
-                    newUser.password = newUser.hashPassword(password);
-                    newUser.save((err, user) => {
-                        if (err) {
-                            return done(err, false);
-                        } else {
-                            user.hashPassword = undefined;
-                            return done(null, newUser);
-                        }
-                    });
-                }
-            } catch (error) {
-                return done(error, false);
+  'signup',
+  new LocalStrategy(
+    {
+      usernameField: 'email',
+      passwordField: 'password',
+    },
+    async (email, password, done) => {
+      try {
+        const user = await User.findOne({ email });
+        if (user) {
+          return done({ message: 'User already exists' }, false);
+        } else {
+          const newUser = new User();
+          newUser.email = email;
+          newUser.password = newUser.hashPassword(password);
+          newUser.save((err, user) => {
+            if (err) {
+              return done(err, false);
+            } else {
+              user.hashPassword = undefined;
+              return done(null, newUser);
             }
+          });
         }
-    )
+      } catch (error) {
+        return done(error, false);
+      }
+    }
+  )
 );
 
 // Local Sign In
 passport.use(
-    'signin',
-    new LocalStrategy(
-        {
-            usernameField: 'email',
-            passwordField: 'password',
-        },
-        async (email, password, done) => {
-            console.log(email, password);
-            try {
-                const user = await User.findOne({ email });
-                console.log(user)
-                if (!user) return done(null, false);
-                console.log("asdasd");
-                const isCorrectPassword = await user.comparePassword(password);
-                console.log("asdasd", isCorrectPassword);
-                if (!isCorrectPassword) return done(null, false);
-
-                return done(null, user);
-            } catch (error) {
-                return done(error, false);
-            }
-        }
-    )
+  'signin',
+  new LocalStrategy(
+    {
+      usernameField: 'email',
+      passwordField: 'password',
+    },
+    async (email, password, done) => {
+      try {
+        const user = await User.findOne({ email });
+        if (!user) return done(null, false);
+        const isCorrectPassword = await user.comparePassword(password);
+        if (!isCorrectPassword) return done(null, false);
+        return done(null, user);
+      } catch (error) {
+        return done(error, false);
+      }
+    }
+  )
 );
 
 // Passport Google
 passport.use(
-    new GooglePlusTokenStrategy(
-        {
-            clientID: process.env.GOOGLE_ID,
-            clientSecret: process.env.GOOGLE_SECRET,
-        },
-        async (accessToken, refreshToken, profile, done) => {
-            try {
-                console.log('accessToken ', accessToken)
-                console.log('refreshToken ', refreshToken)
-                console.log('profile ', profile)
-                // check whether this current user exists in our database
-                const user = await User.findOne({
-                    authGoogleID: profile.id,
-                    authType: "google",
-                });
+  new GooglePlusTokenStrategy(
+    {
+      clientID: process.env.GOOGLE_ID,
+      clientSecret: process.env.GOOGLE_SECRET,
+    },
+    async (accessToken, refreshToken, profile, done) => {
+      try {
+        console.log('accessToken ', accessToken);
+        console.log('refreshToken ', refreshToken);
+        console.log('profile ', profile);
+        // check whether this current user exists in our database
+        const user = await User.findOne({
+          authGoogleID: profile.id,
+          authType: 'google',
+        });
 
-                if (user) return done(null, user)
+        if (user) return done(null, user);
 
-                // If new account
-                const newUser = new User({
-                    authType: 'google',
-                    authGoogleID: profile.id,
-                    email: profile.emails[0].value,
-                    firstName: profile.name.givenName,
-                    lastName: profile.name.familyName
-                })
+        // If new account
+        const newUser = new User({
+          authType: 'google',
+          authGoogleID: profile.id,
+          email: profile.emails[0].value,
+          firstName: profile.name.givenName,
+          lastName: profile.name.familyName,
+        });
 
-                await newUser.save()
+        await newUser.save();
 
-                return done(null, newUser)
-            } catch (error) {
-                console.log('error ', error)
-                return done(error, false);
-            }
-        }
-    )
+        return done(null, newUser);
+      } catch (error) {
+        console.log('error ', error);
+        return done(error, false);
+      }
+    }
+  )
 );

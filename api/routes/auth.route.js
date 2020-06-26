@@ -4,7 +4,15 @@ const controller = require('../controllers/auth.controller');
 const passport = require('passport');
 const passportConfig = require('../configs/passport');
 
-router.post('/signIn', passport.authenticate('signin', { session: false }), controller.test);
-router.post('/signUp', controller.signUp);
+router.post(
+  '/signIn',
+  passport.authenticate('signin', { session: false }),
+  controller.signIn
+);
+router.post(
+  '/signUp',
+  passport.authenticate('signup', { session: false }),
+  controller.signUp
+);
 
 module.exports = router;
