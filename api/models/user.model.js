@@ -23,7 +23,7 @@ const UserSchema = new Schema({
     trim: true,
     required: true
   },
-  hashPassword: {
+  password: {
     type: String,
     required: true
   },
@@ -33,8 +33,12 @@ const UserSchema = new Schema({
   }
 });
 
+UserSchema.methods.hashPassword = function (password) {
+  return bcrypt.hashSync(password, bcrypt.genSaltSync(10));
+};
+
 UserSchema.methods.comparePassword = function (password) {
-  return bcrypt.compareSync(password, this.hashPassword);
+  return bcrypt.compareSync(password, this.password);
 };
 
 const User = mongoose.model('User', UserSchema, 'users');

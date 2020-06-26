@@ -1,6 +1,16 @@
 const User = require('../models/user.model');
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
+const JWT = require('jsonwebtoken')
+
+const encodedToken = (userID) => {
+  return JWT.sign({
+    iss: 'Tran Toan',
+    sub: userID,
+    iat: new Date().getTime(),
+    exp: new Date().setDate(new Date().getDate() + 3)
+  }, JWT_SECRET)
+}
+
 module.exports.signUp = (req, res) => {
   const newUser = new User(req.body);
   newUser.hashPassword = bcrypt.hashSync(req.body.password, 10);
@@ -14,6 +24,12 @@ module.exports.signUp = (req, res) => {
       return res.json(user);
     }
   });
+};
+
+module.exports.test = (req, res) => {
+  const token = encodedToken(req.user._id)
+  res.setHeader('Authorization', token)
+  return res.status(200).json({ success: true })
 };
 
 module.exports.signIn = (req, res) => {
@@ -33,7 +49,7 @@ module.exports.signIn = (req, res) => {
             .status(401)
             .json({ message: 'Authentication failed. Wrong password.' });
         } else {
-          jwt.sign(
+          JWT.sign(
             {
               email: user.email,
               firstName: user.firstName,
