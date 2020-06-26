@@ -69,13 +69,14 @@ passport.use(
             passwordField: 'password',
         },
         async (email, password, done) => {
+            console.log(email, password);
             try {
                 const user = await User.findOne({ email });
-
+                console.log(user)
                 if (!user) return done(null, false);
-
+                console.log("asdasd");
                 const isCorrectPassword = await user.comparePassword(password);
-
+                console.log("asdasd", isCorrectPassword);
                 if (!isCorrectPassword) return done(null, false);
 
                 return done(null, user);
