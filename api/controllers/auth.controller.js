@@ -41,7 +41,7 @@ module.exports.signIn = (req, res) => {
               _id: user._id
             },
             process.env.SECRET_KEY,
-            { expiresIn: '30s' },
+            { expiresIn: 360000 },
             (err, token) => {
               if (err) {
                 res.json({ err });
