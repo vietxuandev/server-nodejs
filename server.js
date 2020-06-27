@@ -4,8 +4,9 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const logger = require('morgan');
 const helmet = require('helmet');
+const httpStatus = require('http-status');
 const cors = require('cors');
-
+require('./api/configs/passport');
 // Import index route
 const indexRoute = require('./api/routes/index.route');
 
@@ -45,21 +46,18 @@ app.use('/api', indexRoute);
 
 // Catch 404 Errors and forward them to error handler
 app.use((req, res, next) => {
-  const err = new Error('Not Found');
-  err.status = 404;
+  const err = new APIError('API not found', httpStatus.NOT_FOUND);
   next(err);
 });
 
 // Error handler function
 app.use((err, req, res, next) => {
-  const error = process.env.NODE_ENV === 'development' ? err : {};
   const status = err.status || 500;
-  // response to client
-  return res.status(status).json({
-    error: {
-      message: error.message,
-    },
-  });
+  const data = {
+    message: err.isPublic ? err.message : httpStatus[status],
+  };
+  if (process.env.NODE_ENV === 'development') data.stack = err.stack;
+  res.status(status).json(data);
 });
 
 // Listen port

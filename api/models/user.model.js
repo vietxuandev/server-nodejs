@@ -23,9 +23,18 @@ const UserSchema = new Schema({
   password: {
     type: String,
   },
-  created: {
-    type: Date,
-    default: Date.now,
+  authGoogleID: {
+    type: String,
+    default: null,
+  },
+  authFacebookID: {
+    type: String,
+    default: null,
+  },
+  authType: {
+    type: String,
+    enum: ['local', 'google', 'facebook'],
+    default: 'local',
   },
 });
 

@@ -2,7 +2,10 @@ const passport = require('passport');
 const JwtStrategy = require('passport-jwt').Strategy;
 const LocalStrategy = require('passport-local').Strategy;
 const GooglePlusTokenStrategy = require('passport-google-plus-token');
+const FacebookTokenStrategy = require('passport-facebook-token');
 const ExtractJwt = require('passport-jwt').ExtractJwt;
+const APIError = require('../helpers/APIError');
+const httpStatus = require('http-status');
 
 const User = require('../models/user.model');
 
@@ -15,9 +18,9 @@ passport.use(
     },
     async (payload, done) => {
       try {
-        const user = await User.findById(payload._id);
-        user.password = undefined;
+        const user = await User.findById(payload.sub);
         if (!user) return done(null, false);
+        user.password = undefined;
         done(null, user);
       } catch (error) {
         done(error, false);
@@ -38,7 +41,8 @@ passport.use(
       try {
         const user = await User.findOne({ email });
         if (user) {
-          return done({ message: 'User already exists' }, false);
+          const error = new APIError('User already exists', 500, true);
+          return done(error, false);
         } else {
           const newUser = new User();
           newUser.email = email;
@@ -116,6 +120,43 @@ passport.use(
       } catch (error) {
         console.log('error ', error);
         return done(error, false);
+      }
+    }
+  )
+);
+
+// Passport Facebook
+passport.use(
+  new FacebookTokenStrategy(
+    {
+      clientID: process.env.FACEBOOK_ID,
+      clientSecret: process.env.FACEBOOK_SECRET,
+    },
+    async (accessToken, refreshToken, profile, done) => {
+      try {
+        // check whether this current user exists in our database
+        const user = await User.findOne({
+          authFacebookID: profile.id,
+          authType: 'google',
+        });
+
+        if (user) return done(null, user);
+
+        // If new account
+        const newUser = new User({
+          authType: 'facebook',
+          authFacebookID: profile.id,
+          email: profile.emails[0].value,
+          firstName: profile.name.givenName,
+          lastName: profile.name.familyName,
+        });
+
+        await newUser.save();
+
+        done(null, newUser);
+      } catch (error) {
+        console.log('error ', error);
+        done(error, false);
       }
     }
   )
