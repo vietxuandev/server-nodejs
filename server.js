@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const logger = require('morgan');
 const helmet = require('helmet');
 const httpStatus = require('http-status');
+const APIError = require('./api/helpers/APIError');
 const cors = require('cors');
 require('./api/configs/passport');
 // Import index route

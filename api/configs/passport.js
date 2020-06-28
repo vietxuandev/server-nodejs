@@ -41,7 +41,11 @@ passport.use(
       try {
         const user = await User.findOne({ email });
         if (user) {
-          const error = new APIError('User already exists', 500, true);
+          const error = new APIError(
+            'User already exists',
+            httpStatus.INTERNAL_SERVER_ERROR,
+            true
+          );
           return done(error, false);
         } else {
           const newUser = new User();
@@ -74,10 +78,25 @@ passport.use(
     async (email, password, done) => {
       try {
         const user = await User.findOne({ email });
-        if (!user) return done(null, false);
-        const isCorrectPassword = await user.comparePassword(password);
-        if (!isCorrectPassword) return done(null, false);
-        return done(null, user);
+        if (!user) {
+          const error = new APIError(
+            'Email is incorrect',
+            httpStatus.UNAUTHORIZED,
+            true
+          );
+          return done(error, false);
+        } else {
+          const isCorrectPassword = await user.comparePassword(password);
+          if (!isCorrectPassword) {
+            const error = new APIError(
+              'Password is incorrect',
+              httpStatus.UNAUTHORIZED,
+              true
+            );
+            return done(error, false);
+          }
+          return done(null, user);
+        }
       } catch (error) {
         return done(error, false);
       }
