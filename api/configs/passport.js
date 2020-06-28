@@ -137,9 +137,9 @@ passport.use(
           lastName: profile.name.familyName,
         });
         await newUser.save();
-        done(null, newUser);
+        return done(null, newUser);
       } catch (error) {
-        done(error, false);
+        return done(error, false);
       }
     }
   )
