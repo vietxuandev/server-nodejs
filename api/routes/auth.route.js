@@ -14,5 +14,15 @@ router.post(
   passport.authenticate('signup', { session: false }),
   controller.signUp
 );
+router.post(
+  '/google',
+  passport.authenticate('auth-google', { session: false }),
+  controller.authGoogle
+);
+router.post(
+  '/facebook',
+  passport.authenticate('auth-facebook', { session: false }),
+  controller.authFacebook
+);
 
 module.exports = router;

@@ -87,6 +87,7 @@ passport.use(
 
 // Passport Google
 passport.use(
+  'auth-google',
   new GooglePlusTokenStrategy(
     {
       clientID: process.env.GOOGLE_ID,
@@ -94,31 +95,20 @@ passport.use(
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
-        console.log('accessToken ', accessToken);
-        console.log('refreshToken ', refreshToken);
-        console.log('profile ', profile);
         // check whether this current user exists in our database
         const user = await User.findOne({
-          authGoogleID: profile.id,
-          authType: 'google',
+          email: profile.emails[0].value,
         });
-
         if (user) return done(null, user);
-
         // If new account
         const newUser = new User({
-          authType: 'google',
-          authGoogleID: profile.id,
           email: profile.emails[0].value,
           firstName: profile.name.givenName,
           lastName: profile.name.familyName,
         });
-
         await newUser.save();
-
         return done(null, newUser);
       } catch (error) {
-        console.log('error ', error);
         return done(error, false);
       }
     }
@@ -127,6 +117,7 @@ passport.use(
 
 // Passport Facebook
 passport.use(
+  'auth-facebook',
   new FacebookTokenStrategy(
     {
       clientID: process.env.FACEBOOK_ID,
@@ -136,26 +127,18 @@ passport.use(
       try {
         // check whether this current user exists in our database
         const user = await User.findOne({
-          authFacebookID: profile.id,
-          authType: 'google',
+          email: profile.emails[0].value,
         });
-
         if (user) return done(null, user);
-
         // If new account
         const newUser = new User({
-          authType: 'facebook',
-          authFacebookID: profile.id,
           email: profile.emails[0].value,
           firstName: profile.name.givenName,
           lastName: profile.name.familyName,
         });
-
         await newUser.save();
-
         done(null, newUser);
       } catch (error) {
-        console.log('error ', error);
         done(error, false);
       }
     }
