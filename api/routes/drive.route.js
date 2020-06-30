@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const controller = require('../controllers/drive.controller')
-const { uploadFile } = require('../drive-api/index')
+const { uploadFile } = require('../controllers/drive.controller')
 const upload = require('../middlewares/uploadMiddleware');
 
 router.get('/', async (req, res) => {
