@@ -4,16 +4,13 @@ const { google } = require('googleapis');
 const TOKEN_PATH = './api/configs/token.json';
 const token = require('../configs/token.json');
 const stream = require('stream');
-
-const { client_secret, client_id, redirect_uris } = credentials.web;
-const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
 const SCOPES = ['https://www.googleapis.com/auth/drive'];
 
+const { client_secret, client_id, redirect_uris } = credentials.web;
+const oAuth2Client = new google.auth.OAuth2(
+    client_id, client_secret, redirect_uris[0]);
 
-const authorize = (credentials) => {
-    const { client_secret, client_id, redirect_uris } = credentials.web;
-    const oAuth2Client = new google.auth.OAuth2(
-        client_id, client_secret, redirect_uris[0]);
+const authorize = () => {
     oAuth2Client.setCredentials(token);
     return oAuth2Client;
 }
@@ -38,7 +35,7 @@ module.exports.getToken = (code) => {
 
 module.exports.uploadFile = async (fileObject) => {
     try {
-        const auth = authorize(credentials);
+        const auth = authorize();
         const drive = google.drive({ version: 'v3', auth });
         const { originalname, mimetype } = fileObject;
         const bufferStream = new stream.PassThrough();
